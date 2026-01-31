@@ -1,0 +1,24 @@
+{
+  "agent": {
+    "model": "openai/gpt-4o-mini",
+    "workspace": "/home/node/.otacon/workspace"
+  },
+  "gateway": {
+    "port": 18789,
+    "bind": "0.0.0.0",
+    "auth": {
+      "mode": "password",
+      "password": "otacon-default-password-change-me"
+    }
+  },
+  "channels": {
+    "webchat": {
+      "enabled": true
+    }
+  },
+  "otacon": {
+    "version": "1.0.0",
+    "simplified": true,
+    "autoStart": true
+  }
+}

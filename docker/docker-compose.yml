@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  otacon:
+    image: otacon/otacon:latest
+    container_name: otacon
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+    environment:
+      - NODE_ENV=production
+      - OTACON_SIMPLIFIED=true
+      - OTACON_AUTO_START=true
+    volumes:
+      - otacon-config:/home/node/.openclaw
+      - otacon-workspace:/home/node/.otacon/workspace
+    networks:
+      - otacon-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a simple web UI for configuration
+  otacon-ui:
+    image: otacon/otacon-ui:latest
+    container_name: otacon-ui
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - OTACON_GATEWAY_URL=http://otacon:18789
+    depends_on:
+      - otacon
+    networks:
+      - otacon-network
+
+volumes:
+  otacon-config:
+    driver: local
+  otacon-workspace:
+    driver: local
+
+networks:
+  otacon-network:
+    driver: bridge

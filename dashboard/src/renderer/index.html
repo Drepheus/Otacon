@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Otacon Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🤖</div>
+        <div class="logo-text">
+          <h1>Otacon</h1>
+          <span>Your AI Assistant</span>
+        </div>
+      </div>
+      
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="chat">
+          <i class="fas fa-comments"></i>
+          <span>Chat</span>
+        </a>
+        <a href="#" class="nav-item" data-page="terminal">
+          <i class="fas fa-terminal"></i>
+          <span>Terminal</span>
+          <span class="nav-badge">Pro</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <a href="#" class="nav-item" data-page="help">
+          <i class="fas fa-question-circle"></i>
+          <span>Help</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="version">v1.0.0</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard Page -->
+      <div id="dashboard-page" class="page active">
+        <header class="page-header">
+          <h2>Dashboard</h2>
+          <div class="status-badge" id="status-badge">
+            <span class="status-dot stopped"></span>
+            <span class="status-text">Stopped</span>
+          </div>
+        </header>
+
+        <!-- Status Card -->
+        <div class="card status-card">
+          <div class="status-content">
+            <div class="status-icon" id="status-icon">
+              <i class="fas fa-power-off"></i>
+            </div>
+            <div class="status-info">
+              <h3 id="status-title">Otacon is Ready</h3>
+              <p id="status-message">Click the button below to start your AI assistant</p>
+              <div class="status-actions">
+                <button id="start-btn" class="btn btn-primary btn-large">
+                  <i class="fas fa-play"></i>
+                  Start Otacon
+                </button>
+                <button id="stop-btn" class="btn btn-danger btn-large" style="display: none;">
+                  <i class="fas fa-stop"></i>
+                  Stop Otacon
+                </button>
+                <button id="open-web-btn" class="btn btn-secondary btn-large" style="display: none;">
+                  <i class="fas fa-external-link-alt"></i>
+                  Open Chat
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="progress-bar" id="progress-bar" style="display: none;">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="stat-icon blue">
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value">GPT-4o</span>
+              <span class="stat-label">AI Model</span>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon green">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value">Local</span>
+              <span class="stat-label">Privacy Mode</span>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon white">
+              <i class="fas fa-plug"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="port-display">18789</span>
+              <span class="stat-label">Port</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div class="card features-card">
+          <h3>What You Can Do</h3>
+          <div class="features-grid">
+            <div class="feature-item">
+              <div class="feature-icon">💬</div>
+              <h4>Chat with AI</h4>
+              <p>Have natural conversations and get help with any task</p>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🌐</div>
+              <h4>Web Browser</h4>
+              <p>Let Otacon browse the web and gather information</p>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">📁</div>
+              <h4>File Management</h4>
+              <p>Organize and work with your files and documents</p>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">⚡</div>
+              <h4>Automation</h4>
+              <p>Set up tasks and let Otacon handle them automatically</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Page -->
+      <div id="chat-page" class="page">
+        <header class="page-header">
+          <h2>Chat Interface</h2>
+          <button class="btn btn-secondary" id="refresh-chat-btn">
+            <i class="fas fa-sync"></i>
+            Refresh
+          </button>
+        </header>
+        
+        <div class="card chat-card">
+          <div class="chat-info">
+            <i class="fas fa-info-circle"></i>
+            <p>The chat interface opens in your web browser. Click below to access it.</p>
+          </div>
+          <button class="btn btn-primary btn-large" onclick="window.otaconAPI.openWebInterface()">
+            <i class="fas fa-external-link-alt"></i>
+            Open Web Chat
+          </button>
+        </div>
+      </div>
+
+      <!-- Terminal Page -->
+      <div id="terminal-page" class="page">
+        <header class="page-header">
+          <h2>Terminal</h2>
+          <div class="terminal-controls">
+            <button class="btn btn-secondary" id="clear-terminal-btn">
+              <i class="fas fa-trash"></i>
+              Clear
+            </button>
+            <button class="btn btn-secondary" id="copy-terminal-btn">
+              <i class="fas fa-copy"></i>
+              Copy Output
+            </button>
+          </div>
+        </header>
+        
+        <div class="card terminal-card">
+          <div class="terminal-header">
+            <div class="terminal-tabs">
+              <button class="terminal-tab active" data-tab="otacon">
+                <i class="fas fa-robot"></i>
+                Otacon CLI
+              </button>
+              <button class="terminal-tab" data-tab="system">
+                <i class="fas fa-desktop"></i>
+                System
+              </button>
+              <button class="terminal-tab" data-tab="node">
+                <i class="fab fa-node-js"></i>
+                Node.js
+              </button>
+            </div>
+            <div class="terminal-actions">
+              <button class="btn btn-small btn-secondary" id="terminal-help-btn" title="Show Available Commands">
+                <i class="fas fa-question"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="terminal-container">
+            <div class="terminal-output" id="terminal-output">
+              <div class="terminal-line welcome">
+                <span class="terminal-prompt">$</span>
+                <span class="terminal-text">Welcome to Otacon Terminal v1.0.0</span>
+              </div>
+              <div class="terminal-line">
+                <span class="terminal-prompt">$</span>
+                <span class="terminal-text">Type 'help' to see available commands</span>
+              </div>
+              <div class="terminal-line">
+                <span class="terminal-prompt">$</span>
+                <span class="terminal-text">Working directory: <span id="terminal-cwd">~</span></span>
+              </div>
+            </div>
+            
+            <div class="terminal-input-line">
+              <span class="terminal-prompt" id="terminal-prompt">$</span>
+              <input type="text" class="terminal-input" id="terminal-input" placeholder="Enter command..." autocomplete="off" spellcheck="false">
+              <button class="terminal-submit" id="terminal-submit">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="terminal-status-bar">
+            <div class="terminal-status-item">
+              <i class="fas fa-circle" id="terminal-status-icon"></i>
+              <span id="terminal-status-text">Ready</span>
+            </div>
+            <div class="terminal-status-item" id="terminal-last-command">
+              <span>Last: -</span>
+            </div>
+            <div class="terminal-status-item">
+              <span id="terminal-history-count">0 commands</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Commands -->
+        <div class="card quick-commands-card">
+          <h3>Quick Commands</h3>
+          <div class="quick-commands-grid">
+            <button class="quick-command-btn" data-command="otacon --version">
+              <i class="fas fa-info-circle"></i>
+              <span>Version</span>
+            </button>
+            <button class="quick-command-btn" data-command="otacon status">
+              <i class="fas fa-heartbeat"></i>
+              <span>Status</span>
+            </button>
+            <button class="quick-command-btn" data-command="otacon doctor">
+              <i class="fas fa-stethoscope"></i>
+              <span>Doctor</span>
+            </button>
+            <button class="quick-command-btn" data-command="otacon models">
+              <i class="fas fa-brain"></i>
+              <span>Models</span>
+            </button>
+            <button class="quick-command-btn" data-command="node --version">
+              <i class="fab fa-node-js"></i>
+              <span>Node Version</span>
+            </button>
+            <button class="quick-command-btn" data-command="npm list -g openclaw">
+              <i class="fas fa-box"></i>
+              <span>Check Install</span>
+            </button>
+            <button class="quick-command-btn" data-command="cd ~/.openclaw && ls -la">
+              <i class="fas fa-folder"></i>
+              <span>Config Files</span>
+            </button>
+            <button class="quick-command-btn" data-command="otacon help">
+              <i class="fas fa-book"></i>
+              <span>Help</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Command History -->
+        <div class="card command-history-card">
+          <h3>Recent Commands</h3>
+          <div class="command-history-list" id="command-history">
+            <div class="command-history-empty">No commands executed yet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div id="settings-page" class="page">
+        <header class="page-header">
+          <h2>Settings</h2>
+        </header>
+
+        <div class="settings-list">
+          <div class="card setting-card">
+            <div class="setting-info">
+              <h4>Configuration Folder</h4>
+              <p>Open the folder where Otacon stores its configuration files</p>
+            </div>
+            <button class="btn btn-secondary" onclick="window.otaconAPI.openConfigFolder()">
+              <i class="fas fa-folder-open"></i>
+              Open Folder
+            </button>
+          </div>
+
+          <div class="card setting-card">
+            <div class="setting-info">
+              <h4>Port Number</h4>
+              <p>The port Otacon runs on (default: 18789)</p>
+            </div>
+            <div class="setting-control">
+              <input type="number" id="port-input" value="18789" min="1024" max="65535">
+              <button class="btn btn-secondary" id="save-port-btn">Save</button>
+            </div>
+          </div>
+
+          <div class="card setting-card">
+            <div class="setting-info">
+              <h4>Auto-Start</h4>
+              <p>Automatically start Otacon when you log in</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="autostart-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="card setting-card">
+            <div class="setting-info">
+              <h4>Reset Configuration</h4>
+              <p>Reset all settings to default (requires restart)</p>
+            </div>
+            <button class="btn btn-danger" id="reset-btn">
+              <i class="fas fa-trash"></i>
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help Page -->
+      <div id="help-page" class="page">
+        <header class="page-header">
+          <h2>Help & Support</h2>
+        </header>
+
+        <div class="help-grid">
+          <div class="card help-card">
+            <div class="help-icon">
+              <i class="fas fa-book"></i>
+            </div>
+            <h3>Documentation</h3>
+            <p>Learn how to use all Otacon features</p>
+            <a href="https://otacon.ai/docs" target="_blank" class="btn btn-secondary">
+              View Docs
+            </a>
+          </div>
+
+          <div class="card help-card">
+            <div class="help-icon">
+              <i class="fab fa-discord"></i>
+            </div>
+            <h3>Community</h3>
+            <p>Join our Discord community for help</p>
+            <a href="https://discord.gg/otacon" target="_blank" class="btn btn-secondary">
+              Join Discord
+            </a>
+          </div>
+
+          <div class="card help-card">
+            <div class="help-icon">
+              <i class="fab fa-github"></i>
+            </div>
+            <h3>GitHub</h3>
+            <p>Report issues or contribute on GitHub</p>
+            <a href="https://github.com/yourusername/otacon" target="_blank" class="btn btn-secondary">
+              View on GitHub
+            </a>
+          </div>
+
+          <div class="card help-card">
+            <div class="help-icon">
+              <i class="fas fa-bug"></i>
+            </div>
+            <h3>Troubleshooting</h3>
+            <p>Common issues and solutions</p>
+            <button class="btn btn-secondary" id="troubleshoot-btn">
+              View Guide
+            </button>
+          </div>
+        </div>
+
+        <div class="card faq-card">
+          <h3>Frequently Asked Questions</h3>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>What is Otacon?</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="faq-answer">
+                Otacon is a simplified personal AI assistant that runs on your computer. It's based on OpenClaw but designed to be much easier to use.
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>Do I need an internet connection?</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="faq-answer">
+                Yes, Otacon needs internet to communicate with AI services (like OpenAI). Your data stays local, but the AI processing happens in the cloud.
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>Is my data private?</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="faq-answer">
+                Yes! Otacon runs locally on your machine. Your conversations and files stay on your computer unless you specifically choose to share them.
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>How do I update Otacon?</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="faq-answer">
+                Otacon will automatically check for updates. You'll get a notification when a new version is available. Just click "Update" to install.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Node.js Missing Modal -->
+  <div id="nodejs-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Node.js Required</h3>
+      </div>
+      <div class="modal-body">
+        <p>Otacon requires Node.js to run. Would you like to download and install it?</p>
+        <p class="text-muted">This is a one-time installation. After installing Node.js, please restart Otacon.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="installNodeJS()">
+          <i class="fas fa-download"></i>
+          Download Node.js
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

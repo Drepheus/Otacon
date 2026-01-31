@@ -1,0 +1,50 @@
+{
+  "name": "otacon",
+  "version": "1.0.0",
+  "description": "Otacon - Simplified AI Assistant (based on OpenClaw)",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "otacon": "./bin/otacon.js",
+    "otacon-start": "./bin/otacon-start.js",
+    "otacon-stop": "./bin/otacon-stop.js",
+    "otacon-help": "./bin/otacon-help.js"
+  },
+  "scripts": {
+    "start": "node bin/otacon-start.js",
+    "dashboard": "cd dashboard && npm start",
+    "dashboard:build": "cd dashboard && npm run build",
+    "dashboard:build:win": "cd dashboard && npm run build:win",
+    "dashboard:build:mac": "cd dashboard && npm run build:mac",
+    "installer:build": "node scripts/build-installer.js",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down",
+    "postinstall": "node installer/postinstall.js && cd dashboard && npm install"
+  },
+  "dependencies": {
+    "openclaw": "^2026.1.29",
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "automation",
+    "openclaw",
+    "otacon",
+    "chatbot"
+  ],
+  "author": "Otacon Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/otacon"
+  },
+  "homepage": "https://otacon.ai"
+}
