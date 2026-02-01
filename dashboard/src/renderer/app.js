@@ -22,10 +22,15 @@ const pages = document.querySelectorAll('.page');
 
 // Initialize
 async function init() {
+  // Load saved settings first
+  await loadSettings();
+  
   // Check initial status
   const status = await window.otaconAPI.getStatus();
-  currentPort = status.port;
-  portDisplay.textContent = currentPort;
+  if (status.port && status.port !== currentPort) {
+    currentPort = status.port;
+    portDisplay.textContent = currentPort;
+  }
   
   if (status.isRunning) {
     updateUI('running', 'Otacon is running!', 'Your AI assistant is ready to help');
@@ -49,8 +54,36 @@ async function init() {
   // Initialize terminal
   initTerminal();
   
-  // Load saved settings
-  loadSettings();
+  // Check OpenClaw health periodically
+  startHealthCheck();
+}
+
+// Periodically check if OpenClaw is running
+let healthCheckInterval;
+function startHealthCheck() {
+  // Check every 10 seconds
+  healthCheckInterval = setInterval(async () => {
+    if (currentStatus === 'running') {
+      try {
+        const response = await fetch(`http://localhost:${currentPort}/health`, { 
+          method: 'GET',
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (!response.ok) {
+          // Health check failed - might have crashed
+          console.warn('Health check failed');
+        }
+      } catch (error) {
+        // Connection failed - service might be down
+        if (currentStatus === 'running') {
+          console.warn('OpenClaw connection lost');
+          updateUI('stopped', 'Connection Lost', 'Otacon appears to have stopped');
+          currentStatus = 'stopped';
+        }
+      }
+    }
+  }, 10000);
 }
 
 function setupEventListeners() {
@@ -86,6 +119,7 @@ function setupEventListeners() {
   document.getElementById('save-port-btn').addEventListener('click', savePort);
   document.getElementById('autostart-toggle').addEventListener('change', toggleAutostart);
   document.getElementById('reset-btn').addEventListener('click', resetConfig);
+  document.getElementById('restart-onboarding-btn').addEventListener('click', restartOnboarding);
   document.getElementById('refresh-chat-btn').addEventListener('click', () => {
     showToast('Chat interface refreshed', 'success');
   });
@@ -249,7 +283,7 @@ function showToast(message, type = 'info', duration = 5000) {
 }
 
 // Settings functions
-function savePort() {
+async function savePort() {
   const portInput = document.getElementById('port-input');
   const port = parseInt(portInput.value);
   
@@ -258,31 +292,102 @@ function savePort() {
     return;
   }
   
-  // Save to store (you'd implement this in main process)
-  currentPort = port;
-  portDisplay.textContent = port;
-  showToast(`Port changed to ${port}. Restart Otacon to apply.`, 'success');
+  try {
+    const result = await window.otaconAPI.updatePort(port);
+    if (result) {
+      currentPort = port;
+      portDisplay.textContent = port;
+      showToast(`Port changed to ${port}. Restart Otacon to apply.`, 'success');
+    } else {
+      showToast('Failed to save port', 'error');
+    }
+  } catch (error) {
+    showToast('Error saving port', 'error');
+    console.error(error);
+  }
 }
 
 function toggleAutostart(e) {
   const enabled = e.target.checked;
-  // Implement autostart logic in main process
-  showToast(`Auto-start ${enabled ? 'enabled' : 'disabled'}`, 'success');
+  // Autostart requires system-level integration - for now just save preference
+  localStorage.setItem('otacon-autostart', enabled);
+  showToast(`Auto-start ${enabled ? 'enabled' : 'disabled'} (requires system restart)`, 'success');
 }
 
 async function resetConfig() {
-  const confirmed = confirm('Are you sure? This will reset all settings to default.');
+  const confirmed = confirm('Are you sure? This will reset all settings to default and restart the setup wizard.');
   
   if (confirmed) {
-    // Reset logic here
-    showToast('Configuration reset. Please restart Otacon.', 'success');
+    try {
+      const result = await window.otaconAPI.resetAllSettings();
+      if (result.success) {
+        showToast('Configuration reset. Restarting setup wizard...', 'success');
+        await window.otaconAPI.restartOnboarding();
+      } else {
+        showToast('Failed to reset: ' + result.error, 'error');
+      }
+    } catch (error) {
+      showToast('Error resetting configuration', 'error');
+      console.error(error);
+    }
   }
 }
 
-function loadSettings() {
-  // Load saved settings from store
-  const autostart = false; // Get from store
-  document.getElementById('autostart-toggle').checked = autostart;
+async function loadSettings() {
+  try {
+    // Load config from main process
+    const config = await window.otaconAPI.getConfig();
+    
+    // Update port display
+    if (config.gateway?.port) {
+      currentPort = config.gateway.port;
+      portDisplay.textContent = currentPort;
+      const portInput = document.getElementById('port-input');
+      if (portInput) portInput.value = currentPort;
+    }
+    
+    // Load autostart preference
+    const autostart = localStorage.getItem('otacon-autostart') === 'true';
+    document.getElementById('autostart-toggle').checked = autostart;
+    
+    // Update status display with config info
+    updateConfigDisplay(config);
+  } catch (error) {
+    console.error('Error loading settings:', error);
+  }
+}
+
+// Update UI with config information
+function updateConfigDisplay(config) {
+  // Update AI provider info if element exists
+  const aiProviderEl = document.getElementById('config-ai-provider');
+  if (aiProviderEl) {
+    const provider = config.agents?.defaults?.model?.primary || 'Not configured';
+    aiProviderEl.textContent = provider;
+  }
+  
+  // Update workspace path if element exists
+  const workspaceEl = document.getElementById('config-workspace');
+  if (workspaceEl) {
+    const workspace = config.agents?.defaults?.workspace || '~/clawd';
+    workspaceEl.textContent = workspace;
+  }
+  
+  // Update channels info
+  const channelsEl = document.getElementById('config-channels');
+  if (channelsEl) {
+    const channels = Object.keys(config.channels || {});
+    channelsEl.textContent = channels.length > 0 ? channels.join(', ') : 'Web only';
+  }
+}
+
+async function restartOnboarding() {
+  const confirmed = confirm('This will restart the setup wizard. Otacon will close and reopen. Continue?');
+  
+  if (confirmed) {
+    showToast('Restarting setup wizard...', 'info');
+    await window.otaconAPI.restartOnboarding();
+  }
 }
 
 // FAQ Accordion
@@ -412,20 +517,50 @@ async function executeTerminalCommand() {
   try {
     let fullCommand = command;
     
-    // Add context based on tab
-    if (currentTerminalTab === 'otacon') {
-      if (!command.startsWith('otacon')) {
-        fullCommand = `otacon ${command}`;
+    // Handle dashboard-specific commands
+    const dashboardCommands = ['start', 'stop', 'status', 'restart'];
+    const commandBase = command.split(' ')[0];
+    
+    if (dashboardCommands.includes(commandBase)) {
+      // Execute dashboard command
+      if (commandBase === 'start') {
+        await window.otaconAPI.startOtacon();
+        addTerminalLine('Starting Otacon... Check the Dashboard for status updates.', 'success');
+      } else if (commandBase === 'stop') {
+        await window.otaconAPI.stopOtacon();
+        addTerminalLine('Stopping Otacon...', 'success');
+      } else if (commandBase === 'status') {
+        const status = await window.otaconAPI.getStatus();
+        const statusText = status.isRunning ? 'RUNNING' : 'STOPPED';
+        const statusColor = status.isRunning ? '\x1b[32m' : '\x1b[31m';
+        addTerminalLine(`Status: ${statusText}`, status.isRunning ? 'success' : 'error');
+        addTerminalLine(`Port: ${status.port}`, 'output');
+        if (status.isRunning) {
+          addTerminalLine(`Web Interface: http://localhost:${status.port}`, 'output');
+        }
+      } else if (commandBase === 'restart') {
+        addTerminalLine('Stopping Otacon...', 'info');
+        await window.otaconAPI.stopOtacon();
+        await new Promise(r => setTimeout(r, 1000));
+        addTerminalLine('Starting Otacon...', 'info');
+        await window.otaconAPI.startOtacon();
       }
-    }
-    
-    // Execute via main process
-    const result = await window.otaconAPI.executeCommand(fullCommand);
-    
-    if (result.success) {
-      addTerminalLine(result.output || 'Command executed successfully', 'success');
     } else {
-      addTerminalLine(result.error || 'Command failed', 'error');
+      // Add context based on tab
+      if (currentTerminalTab === 'otacon') {
+        if (!command.startsWith('openclaw') && !command.startsWith('otacon')) {
+          fullCommand = `openclaw ${command}`;
+        }
+      }
+      
+      // Execute via main process
+      const result = await window.otaconAPI.executeCommand(fullCommand);
+      
+      if (result.success) {
+        addTerminalLine(result.output || 'Command executed successfully', 'success');
+      } else {
+        addTerminalLine(result.error || 'Command failed', 'error');
+      }
     }
   } catch (error) {
     addTerminalLine(`Error: ${error.message}`, 'error');
@@ -508,30 +643,38 @@ function showTerminalHelp() {
 Available Commands:
 ==================
 
-Otacon Commands:
-  otacon start          - Start Otacon gateway
-  otacon stop           - Stop Otacon gateway
-  otacon status         - Check Otacon status
-  otacon doctor         - Run diagnostics
-  otacon models         - List available AI models
-  otacon --version      - Show version
+🔥 OpenClaw CLI (Full Access):
+  openclaw --help              - Show all OpenClaw commands
+  openclaw gateway --port 18789 - Start gateway manually
+  openclaw doctor              - Run diagnostics
+  openclaw models              - List AI models
+  openclaw skills list         - List installed skills
+  openclaw skills install <name> - Install a skill
+  openclaw config              - Show configuration
+  openclaw wizard              - Run setup wizard
+  openclaw --version           - Show version
 
-System Commands:
-  ls, dir              - List files
-  cd <path>            - Change directory
-  pwd                  - Show current directory
-  cat <file>           - View file contents
-  mkdir <name>         - Create directory
+📊 Dashboard Commands:
+  start              - Start Otacon (same as clicking Start button)
+  stop               - Stop Otacon (same as clicking Stop button)
+  status             - Check if Otacon is running
 
-Node.js Commands:
-  node --version       - Check Node.js version
-  npm list -g          - List global packages
-  npm install <pkg>    - Install package
+💻 System Commands:
+  ls, dir            - List files
+  cd <path>          - Change directory
+  pwd                - Show current directory
+  cat <file>         - View file contents
+  mkdir <name>       - Create directory
+  clear              - Clear terminal
 
-Other:
-  clear                - Clear terminal
-  help                 - Show this help
-`;
+📦 Node.js Commands:
+  node --version     - Check Node.js version
+  npm list -g        - List global packages
+  npm install <pkg>  - Install package
+
+💡 Tip: Type 'openclaw --help' to see ALL available OpenClaw commands!
+ You have FULL access to OpenClaw through this terminal.
+ `;
   
   addTerminalLine(helpText, 'info');
 }
@@ -541,8 +684,345 @@ function navigateHistory(direction) {
   // This would track current position in history
 }
 
+// ==========================================
+// ACTIVITY PAGE - Log Streaming & Monitoring
+// ==========================================
+
+let activityLogPaused = false;
+let activityLogs = [];
+let currentStats = {
+  isRunning: false,
+  startTime: null,
+  messageCount: 0,
+  errorCount: 0,
+  activeChannels: 0
+};
+let uptimeInterval;
+
+// Initialize activity page
+async function initActivityPage() {
+  // Setup event listeners
+  setupActivityListeners();
+  
+  // Setup log streaming
+  setupLogStreaming();
+  
+  // Load initial stats
+  await loadActivityStats();
+  
+  // Load system info
+  await loadSystemInfo();
+  
+  // Start uptime counter
+  startUptimeCounter();
+}
+
+function setupActivityListeners() {
+  // Clear logs button
+  document.getElementById('clear-logs-btn')?.addEventListener('click', async () => {
+    await window.otaconAPI.clearLogs();
+    activityLogs = [];
+    renderActivityLogs();
+    showToast('Logs cleared', 'success');
+  });
+  
+  // Export logs button
+  document.getElementById('export-logs-btn')?.addEventListener('click', async () => {
+    const result = await window.otaconAPI.exportLogs();
+    if (result.success) {
+      showToast(`Logs exported to ${result.filePath}`, 'success');
+    } else if (!result.canceled) {
+      showToast('Failed to export logs', 'error');
+    }
+  });
+  
+  // Pause/Resume button
+  document.getElementById('pause-logs-btn')?.addEventListener('click', () => {
+    activityLogPaused = !activityLogPaused;
+    const btn = document.getElementById('pause-logs-btn');
+    if (activityLogPaused) {
+      btn.innerHTML = '<i class="fas fa-play"></i> Resume';
+      showToast('Log streaming paused', 'info');
+    } else {
+      btn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+      showToast('Log streaming resumed', 'info');
+    }
+  });
+  
+  // Filter toggles
+  ['show-info', 'show-warn', 'show-error'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => {
+      renderActivityLogs();
+    });
+  });
+  
+  // View all events button
+  document.getElementById('view-all-events')?.addEventListener('click', () => {
+    showToast('All events view coming soon', 'info');
+  });
+}
+
+function setupLogStreaming() {
+  // Listen for new log entries
+  window.otaconAPI.onLogEntry((entry) => {
+    if (!activityLogPaused) {
+      activityLogs.push(entry);
+      
+      // Keep buffer size limited
+      if (activityLogs.length > 500) {
+        activityLogs.shift();
+      }
+      
+      // Add to display
+      appendLogEntry(entry);
+    }
+  });
+  
+  // Listen for stats updates
+  window.otaconAPI.onStatsUpdate((stats) => {
+    currentStats = { ...currentStats, ...stats };
+    updateActivityStats(stats);
+  });
+}
+
+async function loadActivityStats() {
+  try {
+    const stats = await window.otaconAPI.getStats();
+    currentStats = stats;
+    updateActivityStats(stats);
+    
+    // Update status indicator
+    const statusEl = document.getElementById('activity-status');
+    if (statusEl) {
+      if (stats.isRunning) {
+        statusEl.innerHTML = '<span class="status-indicator running"></span>Running';
+      } else {
+        statusEl.innerHTML = '<span class="status-indicator stopped"></span>Stopped';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+}
+
+async function loadSystemInfo() {
+  try {
+    const config = await window.otaconAPI.getConfig();
+    
+    // Update version info
+    const versionEl = document.getElementById('oc-version');
+    if (versionEl) {
+      versionEl.textContent = config.meta?.lastTouchedVersion || '2026.1.29';
+    }
+    
+    // Update workspace
+    const workspaceEl = document.getElementById('workspace-path');
+    if (workspaceEl) {
+      workspaceEl.textContent = config.agents?.defaults?.workspace || '~/clawd';
+    }
+    
+    // Update port
+    const portEl = document.getElementById('gateway-port');
+    if (portEl) {
+      portEl.textContent = config.gateway?.port || 18789;
+    }
+    
+    // Update connected services
+    updateServicesList(config);
+  } catch (error) {
+    console.error('Error loading system info:', error);
+  }
+}
+
+function updateServicesList(config) {
+  const servicesList = document.getElementById('services-list');
+  if (!servicesList) return;
+  
+  const aiProvider = config.agents?.defaults?.model?.primary || 'Not configured';
+  const channels = config.channels || {};
+  
+  servicesList.innerHTML = `
+    <div class="service-item ${aiProvider !== 'Not configured' ? 'connected' : 'disabled'}">
+      <i class="fas fa-robot"></i>
+      <span>AI Provider</span>
+      <span class="service-status">${aiProvider}</span>
+    </div>
+    <div class="service-item ${channels.discord?.enabled ? 'connected' : 'disabled'}">
+      <i class="fab fa-discord"></i>
+      <span>Discord</span>
+      <span class="service-status">${channels.discord?.enabled ? 'Connected' : 'Not connected'}</span>
+    </div>
+    <div class="service-item ${channels.telegram?.enabled ? 'connected' : 'disabled'}">
+      <i class="fab fa-telegram"></i>
+      <span>Telegram</span>
+      <span class="service-status">${channels.telegram?.enabled ? 'Connected' : 'Not connected'}</span>
+    </div>
+    <div class="service-item ${channels.slack?.enabled ? 'connected' : 'disabled'}">
+      <i class="fab fa-slack"></i>
+      <span>Slack</span>
+      <span class="service-status">${channels.slack?.enabled ? 'Connected' : 'Not connected'}</span>
+    </div>
+    <div class="service-item ${currentStats.isRunning ? 'connected' : 'disabled'}">
+      <i class="fas fa-globe"></i>
+      <span>Web Interface</span>
+      <span class="service-status">${currentStats.isRunning ? 'Running on port ' + currentStats.port : 'Not running'}</span>
+    </div>
+  `;
+}
+
+function updateActivityStats(stats) {
+  // Update message count
+  const messagesEl = document.getElementById('activity-messages');
+  if (messagesEl && stats.messageCount !== undefined) {
+    messagesEl.textContent = stats.messageCount;
+  }
+  
+  // Update error count
+  const errorsEl = document.getElementById('activity-errors');
+  if (errorsEl && stats.errorCount !== undefined) {
+    errorsEl.textContent = stats.errorCount;
+  }
+  
+  // Update active channels
+  const channelsEl = document.getElementById('activity-channels');
+  if (channelsEl && stats.activeChannels !== undefined) {
+    channelsEl.textContent = stats.activeChannels;
+  }
+  
+  // Update status indicator
+  const statusEl = document.getElementById('activity-status');
+  if (statusEl) {
+    if (currentStats.isRunning) {
+      statusEl.innerHTML = '<span class="status-indicator running"></span>Running';
+    } else {
+      statusEl.innerHTML = '<span class="status-indicator stopped"></span>Stopped';
+    }
+  }
+}
+
+function startUptimeCounter() {
+  // Clear existing interval
+  if (uptimeInterval) {
+    clearInterval(uptimeInterval);
+  }
+  
+  // Update every second
+  uptimeInterval = setInterval(() => {
+    const uptimeEl = document.getElementById('activity-uptime');
+    if (uptimeEl && currentStats.startTime && currentStats.isRunning) {
+      const uptime = Date.now() - currentStats.startTime;
+      uptimeEl.textContent = formatUptime(uptime);
+    } else if (uptimeEl) {
+      uptimeEl.textContent = '--:--:--';
+    }
+  }, 1000);
+}
+
+function formatUptime(ms) {
+  const seconds = Math.floor((ms / 1000) % 60);
+  const minutes = Math.floor((ms / (1000 * 60)) % 60);
+  const hours = Math.floor((ms / (1000 * 60 * 60)));
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function appendLogEntry(entry) {
+  const container = document.getElementById('activity-log');
+  if (!container) return;
+  
+  // Check filters
+  const showInfo = document.getElementById('show-info')?.checked ?? true;
+  const showWarn = document.getElementById('show-warn')?.checked ?? true;
+  const showError = document.getElementById('show-error')?.checked ?? true;
+  
+  if (entry.level === 'info' && !showInfo) return;
+  if (entry.level === 'warn' && !showWarn) return;
+  if (entry.level === 'error' && !showError) return;
+  
+  // Remove placeholder if exists
+  const placeholder = container.querySelector('.placeholder');
+  if (placeholder) {
+    placeholder.remove();
+  }
+  
+  // Create log entry element
+  const logEl = document.createElement('div');
+  logEl.className = `log-entry ${entry.level}`;
+  logEl.innerHTML = `
+    <span class="log-time">${entry.time}</span>
+    <span class="log-level ${entry.level}">${entry.level.toUpperCase()}</span>
+    <span class="log-message">${escapeHtml(entry.message)}</span>
+  `;
+  
+  container.appendChild(logEl);
+  
+  // Auto-scroll to bottom
+  container.scrollTop = container.scrollHeight;
+  
+  // Limit displayed entries
+  while (container.children.length > 100) {
+    container.removeChild(container.firstChild);
+  }
+}
+
+function renderActivityLogs() {
+  const container = document.getElementById('activity-log');
+  if (!container) return;
+  
+  // Get filter states
+  const showInfo = document.getElementById('show-info')?.checked ?? true;
+  const showWarn = document.getElementById('show-warn')?.checked ?? true;
+  const showError = document.getElementById('show-error')?.checked ?? true;
+  
+  // Clear container
+  container.innerHTML = '';
+  
+  // Filter and render
+  let hasVisible = false;
+  activityLogs.slice(-100).forEach(entry => {
+    if (entry.level === 'info' && !showInfo) return;
+    if (entry.level === 'warn' && !showWarn) return;
+    if (entry.level === 'error' && !showError) return;
+    
+    hasVisible = true;
+    
+    const logEl = document.createElement('div');
+    logEl.className = `log-entry ${entry.level}`;
+    logEl.innerHTML = `
+      <span class="log-time">${entry.time}</span>
+      <span class="log-level ${entry.level}">${entry.level.toUpperCase()}</span>
+      <span class="log-message">${escapeHtml(entry.message)}</span>
+    `;
+    container.appendChild(logEl);
+  });
+  
+  // Add placeholder if empty
+  if (!hasVisible) {
+    container.innerHTML = `
+      <div class="log-entry placeholder">
+        <span class="log-time">--:--:--</span>
+        <span class="log-level info">INFO</span>
+        <span class="log-message">No logs match current filters</span>
+      </div>
+    `;
+  }
+  
+  // Scroll to bottom
+  container.scrollTop = container.scrollHeight;
+}
+
+// Initialize activity page when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  initActivityPage();
+});
+
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   window.otaconAPI.removeAllListeners('status-update');
   window.otaconAPI.removeAllListeners('node-missing');
+  window.otaconAPI.removeAllListeners('log-entry');
+  window.otaconAPI.removeAllListeners('stats-update');
+  if (uptimeInterval) {
+    clearInterval(uptimeInterval);
+  }
 });

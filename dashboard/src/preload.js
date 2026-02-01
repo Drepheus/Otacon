@@ -13,6 +13,22 @@ contextBridge.exposeInMainWorld('otaconAPI', {
   showSaveDialog: () => ipcRenderer.invoke('show-save-dialog'),
   installNodeJS: () => ipcRenderer.invoke('install-nodejs'),
   executeCommand: (command) => ipcRenderer.invoke('execute-command', command),
+  restartOnboarding: () => ipcRenderer.invoke('restart-onboarding'),
+  resetAllSettings: () => ipcRenderer.invoke('reset-all-settings'),
+  
+  // Config management
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  saveConfig: (config) => ipcRenderer.invoke('save-config', config),
+  updateAIConfig: (provider, apiKey, model) => ipcRenderer.invoke('update-ai-config', { provider, apiKey, model }),
+  updatePermissions: (permissions) => ipcRenderer.invoke('update-permissions', permissions),
+  updateChannel: (channel, settings) => ipcRenderer.invoke('update-channel', { channel, settings }),
+  updatePort: (port) => ipcRenderer.invoke('update-port', port),
+  
+  // Activity/Log management
+  getLogs: () => ipcRenderer.invoke('get-logs'),
+  clearLogs: () => ipcRenderer.invoke('clear-logs'),
+  getStats: () => ipcRenderer.invoke('get-stats'),
+  exportLogs: () => ipcRenderer.invoke('export-logs'),
   
   // Events
   onStatusUpdate: (callback) => {
@@ -20,6 +36,12 @@ contextBridge.exposeInMainWorld('otaconAPI', {
   },
   onNodeMissing: (callback) => {
     ipcRenderer.on('node-missing', () => callback());
+  },
+  onLogEntry: (callback) => {
+    ipcRenderer.on('log-entry', (event, data) => callback(data));
+  },
+  onStatsUpdate: (callback) => {
+    ipcRenderer.on('stats-update', (event, data) => callback(data));
   },
   
   // Remove listeners

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Otacon - Welcome</title>
+  <link rel="stylesheet" href="onboarding.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+  <div class="onboarding-container">
+    <!-- Progress Bar -->
+    <div class="onboarding-progress">
+      <div class="progress-header">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <button class="btn btn-skip" onclick="skipOnboarding()">
+          Skip Setup
+        </button>
+      </div>
+      <div class="progress-steps">
+        <div class="step active" data-step="1">
+          <div class="step-number">1</div>
+          <span>Welcome</span>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-number">2</div>
+          <span>AI Setup</span>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-number">3</div>
+          <span>Access</span>
+        </div>
+        <div class="step" data-step="4">
+          <div class="step-number">4</div>
+          <span>Channels</span>
+        </div>
+        <div class="step" data-step="5">
+          <div class="step-number">5</div>
+          <span>Done</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1: Welcome -->
+    <div id="step-1" class="onboarding-step active">
+      <div class="step-content">
+        <div class="welcome-hero">
+          <div class="logo-large">🤖</div>
+          <h1>Welcome to Otacon</h1>
+          <p class="subtitle">Your Personal AI Assistant</p>
+        </div>
+        
+        <div class="info-cards">
+          <div class="info-card">
+            <div class="info-icon">💬</div>
+            <h3>Chat Naturally</h3>
+            <p>Talk to your AI like a real assistant. Ask questions, get help, automate tasks.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-icon">🔒</div>
+            <h3>Runs Locally</h3>
+            <p>All your data stays on your computer. Private and secure by default.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-icon">⚡</div>
+            <h3>Super Powered</h3>
+            <p>Can access your files, browser, and apps to help you get things done.</p>
+          </div>
+        </div>
+
+        <div class="permission-notice">
+          <div class="notice-header">
+            <i class="fas fa-shield-alt"></i>
+            <span>Important: Device Access</span>
+          </div>
+          <p>Otacon is <strong>powerful</strong>. With your permission, it can:</p>
+          <ul>
+            <li><i class="fas fa-check"></i> Read and write files on your computer</li>
+            <li><i class="fas fa-check"></i> Control a web browser to perform tasks</li>
+            <li><i class="fas fa-check"></i> Send messages through apps (Slack, WhatsApp, etc.)</li>
+            <li><i class="fas fa-check"></i> Run commands and scripts</li>
+          </ul>
+          <p class="notice-footer">You control what Otacon can do. We'll set permissions together in the next steps.</p>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-primary btn-large" onclick="nextStep()">
+            Get Started
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: AI Configuration -->
+    <div id="step-2" class="onboarding-step">
+      <div class="step-content">
+        <div class="step-header">
+          <h2>Choose Your AI</h2>
+          <p>Select which AI service will power Otacon</p>
+        </div>
+
+        <div class="ai-options">
+          <div class="ai-card recommended" data-ai="openai">
+            <div class="ai-badge">Recommended</div>
+            <div class="ai-icon">
+              <i class="fas fa-brain"></i>
+            </div>
+            <h3>OpenAI (GPT-4)</h3>
+            <p class="ai-description">Most capable AI. Great for complex tasks, coding, and creative work.</p>
+            <div class="ai-details">
+              <span class="tag smart">Smart</span>
+              <span class="tag paid">Paid</span>
+            </div>
+            <button class="btn btn-secondary" onclick="selectAI('openai')">
+              Select & Configure
+            </button>
+          </div>
+
+          <div class="ai-card" data-ai="anthropic">
+            <div class="ai-icon">
+              <i class="fas fa-sparkles"></i>
+            </div>
+            <h3>Anthropic (Claude)</h3>
+            <p class="ai-description">Excellent at long conversations and detailed analysis. Very reliable.</p>
+            <div class="ai-details">
+              <span class="tag smart">Smart</span>
+              <span class="tag paid">Paid</span>
+            </div>
+            <button class="btn btn-secondary" onclick="selectAI('anthropic')">
+              Select & Configure
+            </button>
+          </div>
+
+          <div class="ai-card" data-ai="openrouter">
+            <div class="ai-badge free">Free Option</div>
+            <div class="ai-icon">
+              <i class="fas fa-layer-group"></i>
+            </div>
+            <h3>OpenRouter</h3>
+            <p class="ai-description">Access free AI models or connect multiple providers. Great for testing.</p>
+            <div class="ai-details">
+              <span class="tag free">Free</span>
+              <span class="tag flexible">Flexible</span>
+            </div>
+            <button class="btn btn-secondary" onclick="selectAI('openrouter')">
+              Select & Configure
+            </button>
+          </div>
+
+          <div class="ai-card" data-ai="local">
+            <div class="ai-badge beta">Beta</div>
+            <div class="ai-icon">
+              <i class="fas fa-laptop"></i>
+            </div>
+            <h3>Local Model</h3>
+            <p class="ai-description">Run AI entirely on your computer. 100% offline. Requires setup.</p>
+            <div class="ai-details">
+              <span class="tag private">Private</span>
+              <span class="tag setup">Setup Required</span>
+            </div>
+            <button class="btn btn-secondary" onclick="selectAI('local')">
+              Learn More
+            </button>
+          </div>
+        </div>
+
+        <div class="ai-config-panel" id="ai-config-panel" style="display: none;">
+          <div class="config-section">
+            <h4>API Key Setup</h4>
+            <p class="config-help">Don't have an API key? <a href="#" id="api-key-help">Click here for instructions</a></p>
+            
+            <div class="form-group">
+              <label>API Key</label>
+              <div class="input-with-button">
+                <input type="password" id="api-key-input" placeholder="sk-..." class="form-input">
+                <button class="btn btn-icon" onclick="togglePassword()">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <span class="input-help">Your key is stored securely on your computer only</span>
+            </div>
+
+            <div class="form-group">
+              <label>Model (Optional)</label>
+              <select id="model-select" class="form-select">
+                <option value="">Use recommended default</option>
+                <option value="gpt-4o">GPT-4o (Most capable)</option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Fast & cheap)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="config-actions">
+            <button class="btn btn-secondary" onclick="testConnection()">
+              <i class="fas fa-plug"></i>
+              Test Connection
+            </button>
+            <span class="test-status" id="test-status"></span>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-text" onclick="prevStep()">
+            <i class="fas fa-arrow-left"></i>
+            Back
+          </button>
+          <button class="btn btn-primary" onclick="nextStep()" id="ai-next-btn" disabled>
+            Continue
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Device Access & Permissions -->
+    <div id="step-3" class="onboarding-step">
+      <div class="step-content">
+        <div class="step-header">
+          <h2>What Can Otacon Do?</h2>
+          <p>Choose what Otacon is allowed to access on your computer</p>
+        </div>
+
+        <div class="permissions-intro">
+          <div class="security-badge">
+            <i class="fas fa-lock"></i>
+            <span>You're in control</span>
+          </div>
+          <p>Otacon is powerful because it can interact with your computer. Choose what you're comfortable allowing:</p>
+        </div>
+
+        <div class="permissions-list">
+          <div class="permission-item" data-permission="files">
+            <div class="permission-header">
+              <div class="permission-icon">
+                <i class="fas fa-folder-open"></i>
+              </div>
+              <div class="permission-info">
+                <h4>Files & Documents</h4>
+                <p>Read, write, and organize files in your workspace</p>
+              </div>
+              <label class="permission-toggle">
+                <input type="checkbox" checked onchange="updatePermission('files', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="permission-examples">
+              <span class="example-tag"><i class="fas fa-check"></i> Read your notes</span>
+              <span class="example-tag"><i class="fas fa-check"></i> Save AI responses</span>
+              <span class="example-tag"><i class="fas fa-check"></i> Organize documents</span>
+            </div>
+          </div>
+
+          <div class="permission-item" data-permission="browser">
+            <div class="permission-header">
+              <div class="permission-icon">
+                <i class="fas fa-globe"></i>
+              </div>
+              <div class="permission-info">
+                <h4>Web Browser</h4>
+                <p>Control Chrome/Chromium to browse websites for you</p>
+              </div>
+              <label class="permission-toggle">
+                <input type="checkbox" checked onchange="updatePermission('browser', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="permission-examples">
+              <span class="example-tag"><i class="fas fa-check"></i> Check prices</span>
+              <span class="example-tag"><i class="fas fa-check"></i> Research topics</span>
+              <span class="example-tag"><i class="fas fa-check"></i> Fill forms</span>
+            </div>
+          </div>
+
+          <div class="permission-item" data-permission="terminal">
+            <div class="permission-header">
+              <div class="permission-icon">
+                <i class="fas fa-terminal"></i>
+              </div>
+              <div class="permission-info">
+                <h4>Command Line</h4>
+                <p>Run terminal commands and scripts</p>
+              </div>
+              <label class="permission-toggle">
+                <input type="checkbox" onchange="updatePermission('terminal', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="permission-examples">
+              <span class="example-tag"><i class="fas fa-check"></i> Install packages</span>
+              <span class="example-tag"><i class="fas fa-check"></i> Run scripts</span>
+              <span class="example-tag"><i class="fas fa-check"></i> System tasks</span>
+            </div>
+            <div class="permission-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Advanced feature. Only enable if you understand command line usage.</span>
+            </div>
+          </div>
+
+          <div class="permission-item" data-permission="notifications">
+            <div class="permission-header">
+              <div class="permission-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <div class="permission-info">
+                <h4>Notifications</h4>
+                <p>Show alerts and messages from Otacon</p>
+              </div>
+              <label class="permission-toggle">
+                <input type="checkbox" checked onchange="updatePermission('notifications', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="privacy-notice">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            <strong>Privacy Note:</strong> These permissions only control what Otacon <em>can</em> do. 
+            It won't do anything without your explicit request. You can change these anytime in Settings.
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-text" onclick="prevStep()">
+            <i class="fas fa-arrow-left"></i>
+            Back
+          </button>
+          <button class="btn btn-primary" onclick="nextStep()">
+            Continue
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Channels & Integrations -->
+    <div id="step-4" class="onboarding-step">
+      <div class="step-content">
+        <div class="step-header">
+          <h2>Connect Your Apps</h2>
+          <p>Optional: Let Otacon send and receive messages through your favorite apps</p>
+        </div>
+
+        <div class="channels-intro">
+          <p>Otacon can be your assistant across multiple platforms. Chat with it through Slack, WhatsApp, Telegram, and more. <strong>Skip this step</strong> if you just want to use the web interface.</p>
+        </div>
+
+        <div class="channels-grid">
+          <div class="channel-card" data-channel="slack">
+            <div class="channel-header">
+              <div class="channel-icon" style="color: #4A154B;">
+                <i class="fab fa-slack"></i>
+              </div>
+              <div class="channel-info">
+                <h4>Slack</h4>
+                <span class="channel-status">Not connected</span>
+              </div>
+            </div>
+            <p class="channel-description">Chat with Otacon in Slack channels or DMs</p>
+            <button class="btn btn-secondary btn-small" onclick="setupChannel('slack')">
+              <i class="fas fa-plus"></i>
+              Setup
+            </button>
+          </div>
+
+          <div class="channel-card" data-channel="discord">
+            <div class="channel-header">
+              <div class="channel-icon" style="color: #5865F2;">
+                <i class="fab fa-discord"></i>
+              </div>
+              <div class="channel-info">
+                <h4>Discord</h4>
+                <span class="channel-status">Not connected</span>
+              </div>
+            </div>
+            <p class="channel-description">Add Otacon to your Discord server</p>
+            <button class="btn btn-secondary btn-small" onclick="setupChannel('discord')">
+              <i class="fas fa-plus"></i>
+              Setup
+            </button>
+          </div>
+
+          <div class="channel-card" data-channel="telegram">
+            <div class="channel-header">
+              <div class="channel-icon" style="color: #0088cc;">
+                <i class="fab fa-telegram"></i>
+              </div>
+              <div class="channel-info">
+                <h4>Telegram</h4>
+                <span class="channel-status">Not connected</span>
+              </div>
+            </div>
+            <p class="channel-description">Message Otacon through Telegram</p>
+            <button class="btn btn-secondary btn-small" onclick="setupChannel('telegram')">
+              <i class="fas fa-plus"></i>
+              Setup
+            </button>
+          </div>
+
+          <div class="channel-card" data-channel="whatsapp">
+            <div class="channel-header">
+              <div class="channel-icon" style="color: #25D366;">
+                <i class="fab fa-whatsapp"></i>
+              </div>
+              <div class="channel-info">
+                <h4>WhatsApp</h4>
+                <span class="channel-status">Not connected</span>
+              </div>
+            </div>
+            <p class="channel-description">Chat with Otacon on WhatsApp</p>
+            <button class="btn btn-secondary btn-small" onclick="setupChannel('whatsapp')">
+              <i class="fas fa-plus"></i>
+              Setup
+            </button>
+          </div>
+
+          <div class="channel-card" data-channel="email">
+            <div class="channel-header">
+              <div class="channel-icon" style="color: #EA4335;">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="channel-info">
+                <h4>Email (Gmail)</h4>
+                <span class="channel-status">Not connected</span>
+              </div>
+            </div>
+            <p class="channel-description">Let Otacon read and send emails</p>
+            <button class="btn btn-secondary btn-small" onclick="setupChannel('email')">
+              <i class="fas fa-plus"></i>
+              Setup
+            </button>
+          </div>
+
+          <div class="channel-card" data-channel="web">
+            <div class="channel-header">
+              <div class="channel-icon" style="color: #ffffff;">
+                <i class="fas fa-globe"></i>
+              </div>
+              <div class="channel-info">
+                <h4>Web Interface</h4>
+                <span class="channel-status connected">Always available</span>
+              </div>
+            </div>
+            <p class="channel-description">Chat through your browser at localhost:18789</p>
+            <span class="always-enabled"><i class="fas fa-check-circle"></i> Enabled by default</span>
+          </div>
+        </div>
+
+        <div class="channels-skip">
+          <button class="btn btn-text" onclick="nextStep()">
+            Skip for now <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Channel Setup Modal (Hidden by default) -->
+        <div class="channel-setup-modal" id="channel-setup-modal" style="display: none;">
+          <div class="modal-overlay" onclick="closeChannelSetup()"></div>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 id="setup-channel-title">Setup Slack</h3>
+              <button class="btn btn-icon" onclick="closeChannelSetup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="modal-body" id="setup-channel-content">
+              <!-- Dynamic content based on channel -->
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-text" onclick="prevStep()">
+            <i class="fas fa-arrow-left"></i>
+            Back
+          </button>
+          <button class="btn btn-primary" onclick="nextStep()">
+            Continue
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Complete -->
+    <div id="step-5" class="onboarding-step">
+      <div class="step-content">
+        <div class="success-hero">
+          <div class="success-icon">🎉</div>
+          <h1>You're All Set!</h1>
+          <p class="subtitle">Otacon is ready to help you</p>
+        </div>
+
+        <div class="setup-summary">
+          <h3>Your Setup</h3>
+          <div class="summary-list">
+            <div class="summary-item">
+              <i class="fas fa-check-circle"></i>
+              <span>AI Service: <strong id="summary-ai">OpenAI</strong></span>
+            </div>
+            <div class="summary-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Permissions: <strong id="summary-permissions">Files, Browser</strong></span>
+            </div>
+            <div class="summary-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Channels: <strong id="summary-channels">Web Interface</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-start-guide">
+          <h3>Quick Start Guide</h3>
+          <div class="guide-steps">
+            <div class="guide-step">
+              <div class="step-num">1</div>
+              <p>Click "Start Otacon" in the dashboard</p>
+            </div>
+            <div class="guide-step">
+              <div class="step-num">2</div>
+              <p>Open your browser to <code>localhost:18789</code></p>
+            </div>
+            <div class="guide-step">
+              <div class="step-num">3</div>
+              <p>Start chatting with your AI assistant!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pro-tips">
+          <h4>💡 Pro Tips</h4>
+          <ul>
+            <li>Use the <strong>Terminal</strong> tab for advanced commands</li>
+            <li>Otacon stays in your system tray - click the icon anytime</li>
+            <li>Add more channels anytime in Settings</li>
+            <li>Type <code>/help</code> in chat to see available commands</li>
+          </ul>
+        </div>
+
+        <div class="step-actions center">
+          <button class="btn btn-primary btn-large" onclick="finishOnboarding()">
+            Launch Otacon
+            <i class="fas fa-rocket"></i>
+          </button>
+        </div>
+
+        <p class="onboarding-restart">
+          Want to change something? <a href="#" onclick="restartOnboarding()">Run setup again</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>

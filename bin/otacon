@@ -1,0 +1,57 @@
+#!/bin/bash
+# Otacon CLI Wrapper for Mac/Linux
+# This allows running 'otacon' command from anywhere
+# Add this directory to your PATH to use globally: export PATH="$PATH:/path/to/Otacon/bin"
+
+# Get script directory
+OTACON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OPENCLAW_DIR="$OTACON_DIR/openclaw"
+NODE_CMD="node"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Check if Node.js is available
+if ! command -v "$NODE_CMD" &> /dev/null; then
+    echo -e "${RED}Error: Node.js is not installed or not in PATH${NC}"
+    echo "Please install Node.js 22+ from https://nodejs.org"
+    exit 1
+fi
+
+# Check if openclaw exists
+if [ ! -f "$OPENCLAW_DIR/openclaw.mjs" ]; then
+    echo -e "${RED}Error: OpenClaw not found at $OPENCLAW_DIR${NC}"
+    echo "Please run ./setup.sh first"
+    exit 1
+fi
+
+# Set environment variables
+export OPENCLAW_PORT=18789
+export CLAWDBOT_PORT=18789
+export OPENCLAW_BIND=localhost
+export CLAWDBOT_BIND=localhost
+
+# Read API keys from config if exists
+CONFIG_FILE="$HOME/.openclaw/clawdbot.json"
+if [ -f "$CONFIG_FILE" ]; then
+    # Try to extract API keys using node
+    node -e "
+        const fs = require('fs');
+        const config = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
+        if (config.auth?.profiles) {
+            Object.values(config.auth.profiles).forEach(p => {
+                if (p.apiKey) {
+                    if (p.provider === 'openai') console.log('export OPENAI_API_KEY=' + p.apiKey);
+                    if (p.provider === 'anthropic') console.log('export ANTHROPIC_API_KEY=' + p.apiKey);
+                    if (p.provider === 'openrouter') console.log('export OPENROUTER_API_KEY=' + p.apiKey);
+                }
+            });
+        }
+    " 2>/dev/null | while read line; do eval "$line"; done
+fi
+
+# Run the command
+exec "$NODE_CMD" "$OPENCLAW_DIR/openclaw.mjs" "$@"

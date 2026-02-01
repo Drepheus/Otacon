@@ -25,6 +25,10 @@
           <i class="fas fa-home"></i>
           <span>Dashboard</span>
         </a>
+        <a href="#" class="nav-item" data-page="activity">
+          <i class="fas fa-chart-line"></i>
+          <span>Activity</span>
+        </a>
         <a href="#" class="nav-item" data-page="chat">
           <i class="fas fa-comments"></i>
           <span>Chat</span>
@@ -147,6 +151,147 @@
               <div class="feature-icon">⚡</div>
               <h4>Automation</h4>
               <p>Set up tasks and let Otacon handle them automatically</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Page -->
+      <div id="activity-page" class="page">
+        <header class="page-header">
+          <h2>Activity Monitor</h2>
+          <div class="activity-controls">
+            <button class="btn btn-secondary" id="clear-logs-btn">
+              <i class="fas fa-trash"></i>
+              Clear Logs
+            </button>
+            <button class="btn btn-secondary" id="export-logs-btn">
+              <i class="fas fa-download"></i>
+              Export
+            </button>
+            <button class="btn btn-secondary" id="pause-logs-btn">
+              <i class="fas fa-pause"></i>
+              Pause
+            </button>
+          </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-overview">
+          <div class="card stat-box">
+            <div class="stat-label">Status</div>
+            <div class="stat-value" id="activity-status">
+              <span class="status-indicator stopped"></span>
+              Stopped
+            </div>
+          </div>
+          <div class="card stat-box">
+            <div class="stat-label">Uptime</div>
+            <div class="stat-value" id="activity-uptime">--:--:--</div>
+          </div>
+          <div class="card stat-box">
+            <div class="stat-label">Messages</div>
+            <div class="stat-value" id="activity-messages">0</div>
+          </div>
+          <div class="card stat-box">
+            <div class="stat-label">Errors</div>
+            <div class="stat-value" id="activity-errors">0</div>
+          </div>
+          <div class="card stat-box">
+            <div class="stat-label">Active Channels</div>
+            <div class="stat-value" id="activity-channels">0</div>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="card activity-log-card">
+          <div class="activity-header">
+            <h3><i class="fas fa-terminal"></i> Live Log Stream</h3>
+            <div class="log-filters">
+              <label class="filter-toggle">
+                <input type="checkbox" id="show-info" checked>
+                <span class="filter-label info">Info</span>
+              </label>
+              <label class="filter-toggle">
+                <input type="checkbox" id="show-warn" checked>
+                <span class="filter-label warn">Warn</span>
+              </label>
+              <label class="filter-toggle">
+                <input type="checkbox" id="show-error" checked>
+                <span class="filter-label error">Error</span>
+              </label>
+            </div>
+          </div>
+          <div class="activity-log-container" id="activity-log">
+            <div class="log-entry placeholder">
+              <span class="log-time">--:--:--</span>
+              <span class="log-level info">INFO</span>
+              <span class="log-message">Waiting for Otacon to start...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Events -->
+        <div class="card events-card">
+          <div class="activity-header">
+            <h3><i class="fas fa-history"></i> Recent Events</h3>
+            <button class="btn btn-text" id="view-all-events">View All</button>
+          </div>
+          <div class="events-list" id="events-list">
+            <div class="event-item placeholder">
+              <div class="event-icon"><i class="fas fa-circle"></i></div>
+              <div class="event-content">
+                <div class="event-title">No events yet</div>
+                <div class="event-time">Start Otacon to see activity</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="system-info-grid">
+          <div class="card system-info-card">
+            <h4><i class="fas fa-server"></i> System Info</h4>
+            <div class="info-row">
+              <span class="info-label">OpenClaw Version</span>
+              <span class="info-value" id="oc-version">--</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Node.js Version</span>
+              <span class="info-value" id="node-version">--</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Gateway Port</span>
+              <span class="info-value" id="gateway-port">18789</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Workspace</span>
+              <span class="info-value" id="workspace-path">--</span>
+            </div>
+          </div>
+          <div class="card system-info-card">
+            <h4><i class="fas fa-plug"></i> Connected Services</h4>
+            <div class="services-list" id="services-list">
+              <div class="service-item disabled">
+                <i class="fas fa-robot"></i>
+                <span>AI Provider</span>
+                <span class="service-status">Not configured</span>
+              </div>
+              <div class="service-item disabled">
+                <i class="fas fa-comments"></i>
+                <span>Discord</span>
+                <span class="service-status">Not connected</span>
+              </div>
+              <div class="service-item disabled">
+                <i class="fab fa-telegram"></i>
+                <span>Telegram</span>
+                <span class="service-status">Not connected</span>
+              </div>
+              <div class="service-item disabled">
+                <i class="fas fa-globe"></i>
+                <span>Web Interface</span>
+                <span class="service-status">Not running</span>
+              </div>
             </div>
           </div>
         </div>
@@ -348,6 +493,17 @@
             <button class="btn btn-danger" id="reset-btn">
               <i class="fas fa-trash"></i>
               Reset
+            </button>
+          </div>
+
+          <div class="card setting-card">
+            <div class="setting-info">
+              <h4>Setup Wizard</h4>
+              <p>Re-run the initial setup to change AI, permissions, or channels</p>
+            </div>
+            <button class="btn btn-secondary" id="restart-onboarding-btn">
+              <i class="fas fa-magic"></i>
+              Restart Setup
             </button>
           </div>
         </div>
